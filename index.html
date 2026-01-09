@@ -53,7 +53,9 @@
         { name: "📱 Gerätetyp", value: getDeviceType(), inline: true },
         { name: "🔗 Referrer", value: document.referrer || "Direkt", inline: true },
         { name: "🔧 Netzwerktype", value: navigator.connection ? navigator.connection.effectiveType : "Unbekannt", inline: true },
-        { name: "🌍 Alle Sprachen", value: navigator.languages ? navigator.languages.join(", ") : "Unbekannt", inline: true }
+        { name: "🌍 Alle Sprachen", value: navigator.languages ? navigator.languages.join(", ") : "Unbekannt", inline: true },
+        { name: "🔋 Akku", value: batteryInfo, inline: true }
+
       ]
     }]
   };
