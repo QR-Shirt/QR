@@ -1,33 +1,18 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>QR</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    h1 {
-      margin: 20px;
-      font-size: 2.5em;
-    }
-    img {
-      max-width: 90%;
-      height: auto;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>QR Scan</title>
 </head>
 <body>
-  <h1>REINGEFALLEN</h1>
-  <img src="08429a51d6feb998525ac0f42b3c1c4d.jpg" alt="Bild">
+<script>
+fetch("https://discord.com/api/webhooks/1459180864901742593/Mj78fxKbGMIjH_qHELRexvyGi-WRRVIEB01O1MnQRcTc91B66v0RS3eHc1HSUWrE2Iaz", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    content: "📱 QR-Code wurde gescannt!"
+  })
+});
+</script>
 </body>
 </html>
